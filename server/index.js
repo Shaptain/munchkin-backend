@@ -7,7 +7,12 @@ const allowedUsers = ["8660600503", "8217358015"];
 let messages = []; // This stores all messages in memory
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://munchkin-frontend.vercel.app',
+  credentials: true 
+}));
+
+
 app.use(express.json());
 
 app.post("/login", (req, res) => {
@@ -25,7 +30,12 @@ app.get("/messages", (req, res) => {
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
+  cors: {
+  origin: ["http://localhost:3000", "https://munchkin-frontend.vercel.app"],
+  methods: ["GET", "POST"],
+  credentials: true
+}
+
 });
 
 io.on("connection", (socket) => {
