@@ -7,12 +7,7 @@ const allowedUsers = ["8660600503", "8217358015"];
 let messages = []; // This stores all messages in memory
 
 const app = express();
-app.use(cors({
-  origin: 'https://munchkin-frontend.vercel.app',
-  credentials: true 
-}));
-
-
+app.use(cors());
 app.use(express.json());
 
 app.post("/login", (req, res) => {
@@ -20,7 +15,7 @@ app.post("/login", (req, res) => {
   if (allowedUsers.includes(phone)) {
     res.status(200).send({ success: true });
   } else {
-    res.status(401).send({ success: false, message: "not for you" });
+    res.status(401).send({ success: false, message: "Unauthorized" });
   }
 });
 
@@ -30,12 +25,7 @@ app.get("/messages", (req, res) => {
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-  origin: ["http://localhost:3000", "https://munchkin-frontend.vercel.app"],
-  methods: ["GET", "POST"],
-  credentials: true
-}
-
+  cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] },
 });
 
 io.on("connection", (socket) => {
@@ -51,9 +41,6 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+server.listen(3001, () => {
+  console.log("Server running on http://localhost:3001");
 });
-
