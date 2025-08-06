@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 import axios from "axios";
 
-const socket = io("http://localhost:3001");
+const socket = io(process.env.REACT_APP_BACKEND_URL, {
+  transports: ["websocket"],
+  withCredentials: true,
+});
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -19,9 +22,9 @@ function App() {
 
   const login = async () => {
     try {
-      const res = await axios.post("http://localhost:3001/login", { phone });
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, { phone });
       if (res.data.success) {
-        const msgRes = await axios.get("http://localhost:3001/messages");
+        const msgRes = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/messages`);
         setMessages(msgRes.data);
         setLoggedIn(true);
       }
