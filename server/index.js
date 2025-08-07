@@ -7,7 +7,11 @@ const allowedUsers = ["8660600503", "8217358015"];
 let messages = []; // This stores all messages in memory
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://munchkin-frontend-sv4h.vercel.app',
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.post("/login", (req, res) => {
