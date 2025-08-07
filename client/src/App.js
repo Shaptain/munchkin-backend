@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import axios from "axios";
 
-const socket = io(process.env.REACT_APP_BACKEND_URL, {
+function App() {
+  const socket = io(process.env.REACT_APP_BACKEND_URL, {
   transports: ["websocket"],
   withCredentials: true,
-});
-
-function App() {
+  });
   const [loggedIn, setLoggedIn] = useState(false);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -15,16 +14,36 @@ function App() {
   const [image, setImage] = useState(null);
 
   useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
+    if (!socket.current) {
+      socket.current = io(process.env.REACT_APP_BACKEND_URL, {
+        transports: ["websocket"],
+        withCredentials: true,
+      });
+
+      socket.current.on("receive_message", (data) => {
+        setMessages((prev) => [...prev, data]);
+      });
+    }
+
+    return () => {
+      if (socket.current) {
+        socket.current.disconnect();
+      }
+    };
   }, []);
 
   const login = async () => {
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, { phone });
+      const res = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/login`,
+        { phone },
+        { withCredentials: true }
+      );
       if (res.data.success) {
-        const msgRes = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/messages`);
+        const msgRes = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/messages`,
+          { withCredentials: true }
+        );
         setMessages(msgRes.data);
         setLoggedIn(true);
       }
@@ -39,7 +58,7 @@ function App() {
       text: message,
       image,
     };
-    socket.emit("send_message", newMsg);
+    socket.current.emit("send_message", newMsg);
     setMessage("");
     setImage(null);
   };
@@ -75,7 +94,6 @@ function App() {
 
   return (
     <div className="h-screen bg-cover bg-center" style={{ backgroundImage: `url('/bg.jpg')` }}>
-
       <div className="h-full bg-white bg-opacity-80 flex flex-col justify-between p-4">
         <div className="overflow-y-auto flex-1 mb-4">
           {messages.map((msg, idx) => (
@@ -89,15 +107,13 @@ function App() {
               </div>
             </div>
           ))}
-
-
         </div>
         <div className="flex items-center gap-2 bg-white bg-opacity-60 p-2 rounded-xl">
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="flex-1 p-2 border rounded-xl"
-            placeholder="say something"
+            placeholder="Type a message"
           />
           <input type="file" onChange={handleImage} />
           <button
